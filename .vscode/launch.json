@@ -1,0 +1,162 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Turn off heats",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heatoff", "loglevel=2"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Heat bed and hotend",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heat", "loglevel=2"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Heat bed",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heatbed", "loglevel=2"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Heat hotend",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heathotend", "hotendtemp=240", "loglevel=2"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Probe",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["probe", "loglevel=6"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Hot probe",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heathotend", "hotendtemp=103", "heatbed", "probe", "loglevel=3"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Tiny dots",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["savedots", "maxr=10"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Small dots",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["savedots", "maxr=50", "quantum=10"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Big dots",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["savedots", "maxr=140", "quantum=10"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Lay",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["lay", "loglevel=4"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Retract ABS",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heathotend", "hotendheat=240", "heatoff", "retractfilament", "loglevel=4", "noprompt"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Install ABS",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heathotend", "hotendheat=240", "heatoff", "installfilament", "loglevel=4", "noprompt"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Hot lay",
+      "program": "${workspaceFolder}/main.js",
+      "args": ["heat", "lay", "startz=1", "endz=0.3", "extruderate=1", "loglevel=4"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Adjust gcode",
+      "program": "${workspaceFolder}/main.js",
+      "args": [
+        "adjustgcode",
+        "loglevel=3",
+        "botz=-0.45",
+        "topz=-0.55",
+        "gcodein=/Users/Will/Downloads/cheetah.nc",
+        "gcodeout=/Users/Will/Downloads/cheetah.nc.gcode"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Translate nc",
+      "program": "${workspaceFolder}/main.js",
+      "args": [
+        "adjustgcode",
+        "nodots",
+        "loglevel=3",
+        "zoffset=0",
+        "fmul=5",
+        "gcodein=/Users/Will/Desktop/starwolf_4-1_3.nc",
+        "gcodeout=/Users/Will/Desktop/starwolf_4-1_3.gcode"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Laser",
+      "program": "${workspaceFolder}/main.js",
+      "args": [
+        "laser",
+        "loglevel=3",
+        "fmul=300.2",
+        "xoffset=0",
+        "yoffset=0",
+        "xmul=1.8",
+        "ymul=1.8",
+        "gcodein=/Users/Will/Downloads/fingers.nc",
+        "gcodeout=/Users/Will/Downloads/fingers.nc.gcode"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run gcode",
+      "program": "${workspaceFolder}/main.js",
+      "args": [
+        "adjustgcode",
+        "rungcode",
+        "loglevel=6",
+        "botz=-0.35",
+        "topz=-0.45",
+        "heathotend",
+        "hotendtemp=240",
+        "heatbed",
+        "bedtemp=95"
+      ]
+    }
+  ]
+}
