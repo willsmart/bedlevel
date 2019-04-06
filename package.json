@@ -5,7 +5,7 @@
   "author": "Will Smart <will.r.smart@gmail.com>",
   "dependencies": {
     "prompt": "^1.0.0",
-    "serialport": "^6.1.1",
-    "sleep": "^5.1.1"
+    "serialport": "^6.2.2",
+    "sleep": "^5.2.4"
   }
 }
