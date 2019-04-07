@@ -70,6 +70,7 @@ class Robot {
     await this.disableSteppers()
   }
 
+
   async home() {
     return this.sendCommands(GCodeCmds.home());
   }
