@@ -61,13 +61,13 @@ class Robot {
   }
 
   async waitForAllMoves() {
-    return this.sendCommands(GCodeCmds.waitForAllMoves();
+    return this.sendCommands(GCodeCmds.waitForAllMoves());
   }
 
   async finish() {
-    await this.waitForAllMoves()
-    await this.wait()
-    await this.disableSteppers()
+    await this.waitForAllMoves();
+    await this.wait();
+    await this.disableSteppers();
   }
 
   async home() {
