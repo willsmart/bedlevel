@@ -54,7 +54,7 @@ fs.readFileAsync = function(filename) {
     log: function(level) {
       const appLevel = this.args.loglevel === undefined ? 1 : this.args.loglevel;
       if (level <= appLevel) console.log.apply(console, Array.prototype.slice.call(arguments, 1));
-    },
+    }
   };
 
   const dotfn = args.dotfn || 'dots.json';
@@ -71,7 +71,7 @@ fs.readFileAsync = function(filename) {
         if ((xi * xi + yi * yi) * quantum * quantum > maxr * maxr) continue;
         dots.push({
           x: quantum * xi,
-          y: quantum * yi,
+          y: quantum * yi
         });
       }
     }
@@ -92,7 +92,7 @@ fs.readFileAsync = function(filename) {
   if (args.laser) {
     const robotState = {
       isAbsolute: true,
-      laserOn: false,
+      laserOn: false
     };
     const infn = gcodeFile;
     const outfn = args.gcodeout || 'out.gcode';
@@ -123,7 +123,7 @@ fs.readFileAsync = function(filename) {
           break;
         case 'setPosition':
           robotState.pos = robotState.pos || {
-            e: 0,
+            e: 0
           };
           if (command.params.e !== undefined) robotState.pos.e = command.params.e;
           if (command.params.x !== undefined) robotState.pos.x = command.params.x * xmul + xoffset;
@@ -175,7 +175,7 @@ fs.readFileAsync = function(filename) {
               rapid: cmd == 'rapidMove',
               extruder: command.params.e,
               feed: command.params.f,
-              state: robotState,
+              state: robotState
             })
           );
           return ret;
@@ -187,7 +187,7 @@ fs.readFileAsync = function(filename) {
     };
     let it = 0;
     await GCodeFile.save({
-      filename: outfn,
+      filename: outfn
     }).then(({ oncommand, onend }) => {
       return GCodeFile.load({
         filename: infn,
@@ -196,7 +196,7 @@ fs.readFileAsync = function(filename) {
           if (it % 100 == 0) app.log(3, `Line ${it}`);
           translateCommand(command).forEach(newCommand => oncommand(newCommand));
         },
-        onend: onend,
+        onend: onend
       });
     });
     gcodeFile = outfn;
@@ -209,7 +209,7 @@ fs.readFileAsync = function(filename) {
       probes: args.nodots ? undefined : dots,
       maxProbedMove: 10,
       zOffsetAtTop: +(args.topz || 0),
-      zOffsetAtBottom: +(args.botz || 0.1),
+      zOffsetAtBottom: +(args.botz || 0.1)
     };
     const infn = gcodeFile;
     const outfn = args.gcodeout || 'out.gcode';
@@ -229,7 +229,7 @@ fs.readFileAsync = function(filename) {
           break;
         case 'setPosition':
           robotState.pos = robotState.pos || {
-            e: 0,
+            e: 0
           };
           if (command.params.e !== undefined) robotState.pos.e = command.params.e;
           if (command.params.x !== undefined) robotState.pos.x = command.params.x;
@@ -246,14 +246,14 @@ fs.readFileAsync = function(filename) {
             rapid: cmd == 'rapidMove',
             extruder: command.params.e,
             feed: command.params.f,
-            state: robotState,
+            state: robotState
           });
       }
       return [command];
     };
     let it = 0;
     await GCodeFile.save({
-      filename: outfn,
+      filename: outfn
     }).then(({ oncommand, onend }) => {
       return GCodeFile.load({
         filename: infn,
@@ -265,7 +265,7 @@ fs.readFileAsync = function(filename) {
           }
           translateCommand(command).forEach(oncommand);
         },
-        onend: onend,
+        onend: onend
       });
     });
     gcodeFile = outfn;
@@ -288,7 +288,7 @@ fs.readFileAsync = function(filename) {
       GCodeFile.linesFromCommands(
         GCodeCmds.heat({
           bed: bedHeat,
-          wait: true,
+          wait: true
         })
       )
     );
@@ -305,7 +305,7 @@ fs.readFileAsync = function(filename) {
       GCodeFile.linesFromCommands(
         GCodeCmds.heat({
           hotend: hotendHeat,
-          wait: true,
+          wait: true
         })
       )
     );
@@ -360,7 +360,7 @@ fs.readFileAsync = function(filename) {
     const robotState = {
       isAbsolute: true,
       lastX: 0,
-      lastY: 0,
+      lastY: 0
     };
 
     const adjust = ['adjust', 'xoffset', 'yoffset', 'zoffset', 'xmul', 'ymul', 'zmul', 'fmul', 'xyrot'].find(
@@ -390,7 +390,7 @@ fs.readFileAsync = function(filename) {
           break;
         case 'setPosition':
           robotState.pos = robotState.pos || {
-            e: 0,
+            e: 0
           };
           if (command.params.e !== undefined) robotState.pos.e = command.params.e;
           if (command.params.x !== undefined) robotState.lastX = +command.params.x;
@@ -439,7 +439,7 @@ fs.readFileAsync = function(filename) {
               rapid: cmd == 'rapidMove',
               extruder: command.params.e,
               feed: command.params.f,
-              state: robotState,
+              state: robotState
             })
           );
           return ret;
@@ -456,7 +456,7 @@ fs.readFileAsync = function(filename) {
         if (adjust) translateCommand(command).forEach(command => commands.push(command));
         else commands.push(command);
       },
-      onend: () => {},
+      onend: () => {}
     });
     let it = 0,
       pcntWas = 0,
@@ -471,7 +471,7 @@ fs.readFileAsync = function(filename) {
             return;
           }
           return gcode;
-        },
+        }
       });
       if (pcnt != pcntWas && pcnt % 1 == 0) {
         robot.sendCommands([GCodeCmds.message({ msg: `${pcnt}pc ETTG` })], {
@@ -480,7 +480,7 @@ fs.readFileAsync = function(filename) {
             const time = new Date().getTime() / 1000.0 - startedAt,
               ttg = ((100 - pcnt) * time) / pcnt;
             return gcode.replace('ETTG', `${stringFromTime(time)}<${stringFromTime(ttg)} togo`);
-          },
+          }
         });
       }
       pcntWas = pcnt;
@@ -505,7 +505,7 @@ fs.readFileAsync = function(filename) {
         y: r * Math.cos(ang),
         z: lerp(rf, startz, endz),
         extrudePerMM: extrudePerMM,
-        feed: speed,
+        feed: speed
       });
     }
     await robot.wait();
@@ -523,7 +523,7 @@ fs.readFileAsync = function(filename) {
 
       await robot.move({
         extrude: plugExtrudeLength,
-        feed: fastExtrudeFeedrate,
+        feed: fastExtrudeFeedrate
       });
 
       await robot.waitForSends();
@@ -532,9 +532,9 @@ fs.readFileAsync = function(filename) {
 
       await robot.move({
         extrude: -(plugExtrudeLength + bowdenLength),
-        feed: fastExtrudeFeedrate,
+        feed: fastExtrudeFeedrate
       });
-      await robot.disableSteppers();
+      await robot.finish();
     } catch (err) {
       console.log('Quit');
     }
@@ -546,17 +546,17 @@ fs.readFileAsync = function(filename) {
 
       await robot.move({
         extrude: bowdenLength,
-        feed: fastExtrudeFeedrate,
+        feed: fastExtrudeFeedrate
       });
 
       while (true) {
-        await robot.disableSteppers();
+        await robot.finish();
         console.log("Enter 'n' to quit");
         await robot.waitForSends();
         if ((await prompt('continue')).continue == 'n') break;
         await robot.move({
           extrude: 10,
-          feed: extrudeFeedrate,
+          feed: extrudeFeedrate
         });
       }
     } catch (err) {
@@ -570,13 +570,13 @@ fs.readFileAsync = function(filename) {
       GCodeFile.linesFromCommands(
         GCodeCmds.heat({
           hotend: 0,
-          bed: 0,
+          bed: 0
         })
       )
     );
   }
 
-  await robot.disableSteppers();
+  await robot.finish();
   if (!args.noclose) {
     await robot.close();
   }

@@ -12,6 +12,7 @@ const homeCmd = 'G28',
   rapidMoveCmd = 'G0',
   moveCmd = 'G1',
   disableSteppersCmd = 'M18',
+  waitForAllMovesCmd = 'M400',
   messageCmd = 'M117',
   absoluteCmd = 'G90',
   relativeCmd = 'G91',
@@ -28,11 +29,12 @@ const humanToGCode = {
   rapidMove: rapidMoveCmd,
   move: moveCmd,
   disableSteppers: disableSteppersCmd,
+  waitForAllMoves: waitForAllMovesCmd,
   message: messageCmd,
   absolute: absoluteCmd,
   relative: relativeCmd,
   laserPower: laserPowerCmd,
-  laserFeedrate: laserFeedrateCmd,
+  laserFeedrate: laserFeedrateCmd
 };
 
 const gcodeToHuman = {};
@@ -54,6 +56,10 @@ const GCodeCmds = (module.exports = {
 
   disableSteppers({ x, y, z, e } = {}) {
     return [{ command: disableSteppersCmd, params: { x, y, z, e } }];
+  },
+
+  waitForAllMoves() {
+    return [{ command: waitForAllMovesCmd, params: {} }];
   },
 
   message({ msg } = {}) {
@@ -85,8 +91,8 @@ const GCodeCmds = (module.exports = {
           z,
           f: feed,
           r: laser,
-          e: extruder,
-        },
+          e: extruder
+        }
       });
     }
     if (dx !== undefined || dy !== undefined || dz !== undefined || extrude !== undefined) {
@@ -99,8 +105,8 @@ const GCodeCmds = (module.exports = {
           z: dz,
           f: feed,
           r: laser,
-          e: extrude,
-        },
+          e: extrude
+        }
       });
       ret.push({ command: absoluteCmd });
     }
@@ -111,8 +117,8 @@ const GCodeCmds = (module.exports = {
     return [
       {
         command: laserPowerCmd,
-        params: { r: power, s: killAfterMove == false ? 0 : 1 },
-      },
+        params: { r: power, s: killAfterMove == false ? 0 : 1 }
+      }
     ];
   },
 
@@ -120,10 +126,10 @@ const GCodeCmds = (module.exports = {
     return [
       {
         command: laserFeedrateCmd,
-        params: { f: feed },
-      },
+        params: { f: feed }
+      }
     ];
-  },
+  }
 });
 
 function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM, state, rapid }) {
@@ -144,7 +150,7 @@ function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM,
         extruder,
         feed,
         laser,
-        rapid,
+        rapid
       })
     );
     if (x !== undefined) state.pos.x = x;
@@ -161,7 +167,7 @@ function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM,
   let endPos = {
       x: (x === undefined ? state.pos.x : x) + (dx || 0),
       y: (y === undefined ? state.pos.y : y) + (dy || 0),
-      z: (z === undefined ? state.pos.z : z) + (dz || 0),
+      z: (z === undefined ? state.pos.z : z) + (dz || 0)
     },
     dist = Math.sqrt(
       (endPos.x - state.pos.x) * (endPos.x - state.pos.x) +
@@ -180,7 +186,7 @@ function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM,
           x: lerp(f / dist, state.pos.x, endPos.x),
           y: lerp(f / dist, state.pos.y, endPos.y),
           z: lerp(f / dist, state.pos.z, endPos.z),
-          e: lerp(f / dist, state.pos.e, endPos.e),
+          e: lerp(f / dist, state.pos.e, endPos.e)
         };
 
         const zprobe = getProbez(Object.assign({ state }, newPos));
@@ -193,7 +199,7 @@ function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM,
             feed,
             laser,
             rapid,
-            extruder: newPos.e,
+            extruder: newPos.e
           })
         );
         if (zprobe) {
@@ -207,7 +213,7 @@ function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM,
         ...GCodeCmds.move({
           feed,
           laser,
-          extruder: endPos.e,
+          extruder: endPos.e
         })
       );
       state.pos = endPos;
@@ -221,7 +227,7 @@ function statelyMove({ x, y, z, dx, dy, dz, feed, extruder, laser, extrudePerMM,
         rapid,
         feed,
         laser,
-        extruder: endPos.e,
+        extruder: endPos.e
       })
     );
     if (state.zOffsetAtBottom) {
