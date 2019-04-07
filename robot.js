@@ -22,14 +22,17 @@ class Robot {
 
     const list = await SerialPort.list();
     console.log(JSON.stringify(list.map(v => v.comName)));
-    let port = list.reduce((prev, port) => (/usbmodem/.test(port.comName) ? port.comName : prev), false);
+    let port = list.reduce(
+      (prev, port) => (/usbmodem/.test(port.comName) || /^ttyACM/.test(port.comName) ? port.comName : prev),
+      false
+    );
     if (!port) throw new Error('No usbmodem port found');
     robot.app.log(1, `Opening robot on port ${port}`);
     await new Promise(resolve => {
       robot.serialPort = new SerialPort(
         port,
         {
-          baudRate: 250000,
+          baudRate: 250000
         },
         resolve
       );
@@ -172,17 +175,17 @@ class Robot {
       this.outstandingZprobes.push({
         x: x,
         y: y,
-        resolve,
+        resolve
       });
       robot.send(
         GCodeFile.linesFromCommands(
           ...GCodeCmds.home(),
           ...GCodeCmds.move({
-            dz: -100,
+            dz: -100
           }),
           ...GCodeCmds.zprobe({
             x: x,
-            y: y,
+            y: y
           })
         )
       );
