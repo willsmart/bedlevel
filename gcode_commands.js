@@ -12,6 +12,7 @@ const homeCmd = 'G28',
   rapidMoveCmd = 'G0',
   moveCmd = 'G1',
   disableSteppersCmd = 'M18',
+  messageCmd = 'M117',
   absoluteCmd = 'G90',
   relativeCmd = 'G91',
   laserPowerCmd = 'M1000',
@@ -27,6 +28,7 @@ const humanToGCode = {
   rapidMove: rapidMoveCmd,
   move: moveCmd,
   disableSteppers: disableSteppersCmd,
+  message: messageCmd,
   absolute: absoluteCmd,
   relative: relativeCmd,
   laserPower: laserPowerCmd,
@@ -51,7 +53,11 @@ const GCodeCmds = (module.exports = {
   },
 
   disableSteppers({ x, y, z, e } = {}) {
-    return [{ command: this.disableSteppersCmd, params: { x, y, z, e } }];
+    return [{ command: disableSteppersCmd, params: { x, y, z, e } }];
+  },
+
+  message({ msg } = {}) {
+    return [{ command: messageCmd, params: { str: msg } }];
   },
 
   zprobe({ x, y }) {

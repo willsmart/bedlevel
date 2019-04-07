@@ -61,13 +61,13 @@ class Robot {
     return this.sendCommands(GCodeCmds.home());
   }
 
-  async sendCommands(commands, pcnt) {
+  async sendCommands(commands, { pcnt, processGCode } = {}) {
     const robot = this;
 
-    return robot.send(GCodeFile.linesFromCommands(commands), pcnt);
+    return robot.send(GCodeFile.linesFromCommands(commands), { pcnt, processGCode });
   }
 
-  async send(gcode, pcnt) {
+  async send(gcode, { pcnt, processGCode } = {}) {
     const robot = this;
 
     if (!robot.serialPort) return;
@@ -80,11 +80,12 @@ class Robot {
 
       if (robot.outstandingSends < robot.maxOutstandingSends) {
         robot.app.log(2, `>>>${pcnt ? ` (${pcnt}%)` : ''} "${gcode}"`);
+        if (processGCode && !(gcode = processGCode(gcode))) return;
         robot.serialPort.write(gcode + '\n');
         robot.outstandingSends++;
         ret = true;
       } else {
-        robot.queuedSends.push({ gcode, pcnt });
+        robot.queuedSends.push({ gcode, pcnt, processGCode });
       }
     });
     if (!ret) return;
@@ -116,8 +117,9 @@ class Robot {
         if (--robot.outstandingSends < robot.maxOutstandingSends) {
           let info = robot.queuedSends.shift();
           if (info) {
-            let { gcode, pcnt } = info;
+            let { gcode, pcnt, processGCode } = info;
             robot.app.log(2, `>>>${pcnt ? ` (${pcnt}%)` : ''} "${gcode}"`);
+            if (processGCode && !(gcode = processGCode(gcode))) return;
             robot.serialPort.write(gcode + '\n');
             robot.outstandingSends++;
             didWrite = true;

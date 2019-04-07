@@ -1,13 +1,18 @@
 const ReadLine = require('readline');
 const fs = require('fs');
 
+const textualCommands = {
+  M117: true,
+  M118: true,
+};
+
 // API
 module.exports = {
   split,
   load,
   save,
   lineFromCommand,
-  linesFromCommands
+  linesFromCommands,
 };
 
 function split(gcodes) {
@@ -32,7 +37,7 @@ function _split(gcodes, addTo) {
 function load({ filename, oncommand, onend }) {
   return new Promise(resolve => {
     var lineReader = ReadLine.createInterface({
-      input: fs.createReadStream(filename)
+      input: fs.createReadStream(filename),
     });
 
     if (onend) {
@@ -58,7 +63,7 @@ function commandFromLine(line, modalState) {
   if (!match[2]) {
     return {
       string: match[0],
-      comment: comment || ''
+      comment: comment || '',
     };
   }
 
@@ -77,22 +82,25 @@ function commandFromLine(line, modalState) {
     string: match[0],
     comment: comment || '',
     command: commandType,
-    params: {}
+    params: {},
   };
-  let paramMatch;
-  const regex = /\s*(([A-Z])(-?\d+(?:\.\d+)?)|[^\s]+)/g;
-  let hasGorM;
-  while ((paramMatch = regex.exec(args))) {
-    if (paramMatch[2]) {
-      if (paramMatch[2] == 'G' || paramMatch[2] == 'M') {
-        if (hasGorM) {
-          throw new Error(`Line has two or more G or M commands: ${line}`);
+  if (commandType in textualCommands) {
+    command.params.str = args;
+  } else {
+    let paramMatch, hasGorM;
+    const regex = /\s*(([A-Z])(-?\d+(?:\.\d+)?)|[^\s]+)/g;
+    while ((paramMatch = regex.exec(args))) {
+      if (paramMatch[2]) {
+        if (paramMatch[2] == 'G' || paramMatch[2] == 'M') {
+          if (hasGorM) {
+            throw new Error(`Line has two or more G or M commands: ${line}`);
+          }
+          hasGorM = true;
         }
-        hasGorM = true;
+        command.params[paramMatch[2].toLowerCase()] = +paramMatch[3];
+      } else {
+        throw new Error(`Could not parse args for command ${line}`);
       }
-      command.params[paramMatch[2].toLowerCase()] = +paramMatch[3];
-    } else {
-      throw new Error(`Could not parse args for command ${line}`);
     }
   }
   return command;
@@ -104,7 +112,7 @@ function save({ filename }) {
     stream.once('open', function(fd) {
       resolve({
         oncommand: command => stream.write(`${lineFromCommand(command)}\n`),
-        onend: () => stream.end()
+        onend: () => stream.end(),
       });
     });
   });
@@ -127,7 +135,8 @@ function lineFromCommand(command) {
       Object.keys(command.params).forEach(param => {
         const val = command.params[param];
         if (typeof val == 'number' || typeof val == 'string') {
-          ret += ` ${param.toUpperCase()}${+(+val).toFixed(4)}`;
+          if (param == 'str') ret += ` ${val}`;
+          else ret += ` ${param.toUpperCase()}${+(+val).toFixed(4)}`;
         }
       });
     }
