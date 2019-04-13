@@ -1,2 +1,2 @@
 const WebSocketClient = require('../../web-socket/web-socket-client');
-window.ws = new WebSocketClient();
+window.ws = new WebSocketClient({ port: 80 });
