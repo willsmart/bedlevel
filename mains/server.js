@@ -22,7 +22,7 @@ const WebSocketServer = require('../web-socket/web-socket-server');
     if (tick < 0) console.log(wsserver, args);
   }, 5000);
 
-  await wsserver.start();
+  await wsserver.start({ port: +(args.port || 3000) });
 
   //  console.log(cache, schema, wsserver, datapointDbConnection, connection, args, connectionInfo);
 })();
