@@ -7,12 +7,18 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Server",
+      "program": "${workspaceFolder}/mains/server.js",
+      "args": []
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Turn off heats",
       "program": "${workspaceFolder}/main.js",
       "args": ["heatoff", "loglevel=2"]
     },
     {
-      "type": "node",
       "request": "launch",
       "name": "Heat bed and hotend",
       "program": "${workspaceFolder}/main.js",

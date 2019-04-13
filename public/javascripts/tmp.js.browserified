@@ -1,0 +1,452 @@
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+module.exports = log;
+
+let enabledLogs = { err: true, ws: true };
+
+function logIsEnabled(module) {
+  let parent = enabledLogs;
+  for (const part of module.split('.')) {
+    let val = parent[part];
+    if (!val) {
+      if (val === false) return false;
+      val = parent.other;
+      if (!val) return false;
+    }
+    if (val === true) return true;
+    if (typeof val !== 'object') return false;
+    parent = val;
+  }
+  return true;
+}
+
+function log(module, ...args) {
+  if (!logIsEnabled(module)) return false;
+  if (args.length == 1 && typeof args[0] == 'function') args = [args[0]()];
+  if (module === 'err' || module.startsWith('err.')) {
+    console.error.apply(console, args);
+  } else console.log.apply(console, args);
+  return true;
+}
+
+log.enableLog = function(module) {
+  if (module === undefined) {
+    enabledLogs = {
+      err: true,
+      diff: false,
+      verbose: false,
+      //dp: false,
+      db: false,
+      other: { verbose: false, other: true }
+    };
+    return;
+  }
+  enabledLogs[module] = true;
+};
+
+log.disableLog = function(module) {
+  if (module === undefined) {
+    enabledLogs = { err: true };
+    return;
+  }
+  delete enabledLogs[module];
+};
+
+if (typeof window !== 'undefined') {
+  window.enableNoboLog = log.enableLog;
+  window.disableNoboLog = log.disableLog;
+}
+
+},{}],2:[function(require,module,exports){
+// convert_ids
+// © Will Smart 2018. Licence: MIT
+
+// PublicApi wraps a given class in a function that mimics the class's public methods
+// essentially it allows js to support private methods/properties on a class
+// I am sure this is available in other modules, this is just my version.
+
+// To use, create a class, and provide a static method called publicMethods that returns an array of strings
+// eg.
+
+// class MyPrivateClass {
+//   static publicMethods() {
+//     return [
+//       'publicMethod',
+//       'publicGetter',
+//       'publicStaticMethod'
+//     ]
+//   }
+//   publicMethod() {this.privateMethod()}
+//   privateMethod() {}
+//   get publicGetter() {return `It's ${this.privateGetter}`}
+//   get privateGetter() {return '42'}
+//   static publicStaticMethod() {this.privateStaticMethod()}
+//   static privateStaticMethod() {}
+// }
+//
+// Essentially returns a class exposing only the public methods from MyPrivateClass
+// const PublicInterface = PublicApi({fromClass:MyPrivateClass})
+//
+// or allowing instances of PublicInterface to have a '__private' property
+//  which points to the underlying MyPrivateClass thus potentially easing debugging
+//  and making instance construction a little quicker and instance size a little smaller
+// const PublicInterface = PublicApi({fromClass:MyPrivateClass, hasExposedBackDoor:true})
+//
+// Use PublicInterface like a class
+// const blic = new PublicInterface()
+// blic.publicGetter == "It's 42"
+// blic.privateGetter == undefined
+
+// note that setters aren't supported as yet
+
+// API is the class wrapping function. include as
+// const PublicApi = require(pathToFile)
+module.exports = PublicApi;
+
+// simple function to wrap a class, exposing only the public interface to outsiders
+function PublicApi({ fromClass, hasExposedBackDoor }) {
+  const publicInstanceMethods = [],
+    publicInstanceGetterMethods = [];
+
+  fromClass.publicMethods().forEach(methodName => {
+    if (fromClass.prototype.__lookupGetter__(methodName)) {
+      let method = fromClass.prototype.__lookupGetter__(methodName);
+      publicInstanceGetterMethods.push({ methodName, method });
+    } else if (fromClass.prototype[methodName]) {
+      let method = fromClass.prototype[methodName];
+      publicInstanceMethods.push({ methodName, method });
+    }
+  });
+
+  const PublicClass = function(arguments = {}) {
+    const private = new fromClass(arguments);
+    private.publicApi = this;
+
+    if (hasExposedBackDoor) this.__private = private;
+    else {
+      publicInstanceGetterMethods.forEach(({ methodName, method }) => {
+        this.__defineGetter__(
+          methodName,
+          function() {
+            return method.apply(private, arguments);
+          }
+        );
+      });
+      publicInstanceMethods.forEach(({ methodName, method }) => {
+        this[methodName] = function() {
+          return method.apply(private, arguments);
+        };
+      });
+    }
+  };
+
+  fromClass.publicMethods().forEach(methodName => {
+    if (fromClass.__lookupGetter__(methodName)) {
+      let method = fromClass.__lookupGetter__(methodName);
+      PublicClass.__defineGetter__(
+        methodName,
+        function() {
+          return method.apply(fromClass, arguments);
+        }
+      );
+    } else if (fromClass[methodName]) {
+      let method = fromClass[methodName];
+      PublicClass[methodName] = function() {
+        return method.apply(fromClass, arguments);
+      };
+    }
+
+    publicInstanceGetterMethods.forEach(({ methodName, method }) => {
+      PublicClass.prototype.__defineGetter__(
+        methodName,
+        function() {
+          return method.apply(this.__private, arguments);
+        }
+      );
+    });
+    publicInstanceMethods.forEach(({ methodName, method }) => {
+      PublicClass.prototype[methodName] = function() {
+        return method.apply(this.__private, arguments);
+      };
+    });
+  });
+
+  return PublicClass;
+}
+
+},{}],3:[function(require,module,exports){
+// watchable
+// © Will Smart 2018. Licence: MIT
+
+// This is a stupidly simple observer pattern util
+
+// API is the function. Require via
+//   const makeClassWatchable = require(pathToFile)
+// then after creating your class use as:
+//   makeClassWatchable(TheClass)
+
+module.exports = makeClassWatchable;
+
+let g_nextUniqueCallbackIndex = 1;
+
+function uniqueCallbackKey() {
+  return `callback__${g_nextUniqueCallbackIndex++}`;
+}
+
+function makeClassWatchable(watchableClass) {
+  Object.assign(watchableClass.prototype, {
+    watch: function(listener) {
+      const me = this;
+      if (!listener.callbackKey) listener.callbackKey = uniqueCallbackKey();
+      if (me.listeners === undefined) {
+        me.listeners = [listener];
+        if (typeof me.firstListenerAdded == 'function') {
+          me.firstListenerAdded.call(me);
+        }
+      } else {
+        const listeners = me.listeners.slice();
+        let index = listeners.findIndex(listener2 => listener.callbackKey == listener2.callbackKey);
+        if (index == -1) listeners.push(listener);
+        else listeners[index] = listener;
+        me.listeners = listeners;
+      }
+      if (typeof me.listenersChanged == 'function') {
+        me.listenersChanged.call(me);
+      }
+      return listener.callbackKey;
+    },
+
+    stopWatching: function({ callbackKey }) {
+      const me = this;
+
+      if (!me.listeners) return;
+      let index = me.listeners.findIndex(listener => listener.callbackKey == callbackKey);
+      if (index == -1) return;
+      const listeners = me.listeners.slice(),
+        listener = listeners.splice(index, 1)[0];
+      if (!listeners.length) {
+        delete me.listeners;
+        if (typeof me.lastListenerRemoved == 'function') {
+          me.lastListenerRemoved.call(me);
+        }
+      } else {
+        me.listeners = listeners;
+      }
+      if (typeof me.listenersChanged == 'function') {
+        me.listenersChanged.call(me);
+      }
+      return listener;
+    },
+
+    forEachListener: function(type, callback) {
+      const me = this,
+        { listeners } = me;
+
+      if (!listeners) return;
+
+      for (const listener of listeners) {
+        if (typeof listener[type] == 'function') callback.call(me, listener);
+      }
+    },
+
+    notifyListeners: function(type, ...args) {
+      const me = this;
+      me.forEachListener(type, listener => listener[type].apply(me, args));
+    },
+  });
+}
+
+},{}],4:[function(require,module,exports){
+(function (global){
+// https://github.com/maxogden/websocket-stream/blob/48dc3ddf943e5ada668c31ccd94e9186f02fafbd/ws-fallback.js
+
+var ws = null
+
+if (typeof WebSocket !== 'undefined') {
+  ws = WebSocket
+} else if (typeof MozWebSocket !== 'undefined') {
+  ws = MozWebSocket
+} else if (typeof global !== 'undefined') {
+  ws = global.WebSocket || global.MozWebSocket
+} else if (typeof window !== 'undefined') {
+  ws = window.WebSocket || window.MozWebSocket
+} else if (typeof self !== 'undefined') {
+  ws = self.WebSocket || self.MozWebSocket
+}
+
+module.exports = ws
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],5:[function(require,module,exports){
+const WebSocketClient = require('../../web-socket/web-socket-client');
+window.ws = new WebSocketClient();
+
+},{"../../web-socket/web-socket-client":6}],6:[function(require,module,exports){
+const WebSocket = require('isomorphic-ws');
+const PublicApi = require('../general/public-api');
+const makeClassWatchable = require('../general/watchable');
+const log = require('../general/log');
+
+// API is auto-generated at the bottom from the public interface of this class
+
+class WebSocketClient {
+  // public methods
+  static publicMethods() {
+    return ['sendMessage', 'sendPayload', 'isOpen', 'watch', 'stopWatching'];
+  }
+
+  constructor({ port = 3000 } = {}) {
+    const client = this;
+
+    window.sendWSMessage = function(message) {
+      client.sendMessage({ message });
+    };
+
+    client._isOpen = false;
+    client.nextMessageIndex = 1;
+    client.clientParams = {
+      port: port
+    };
+
+    function open() {
+      const host =
+        window.location.protocol == 'https:'
+          ? `wss://sock.${window.location.host}`
+          : `ws://${window.location.hostname}:${port}`;
+      const ws = (client.ws = new WebSocket(
+        `${host}/sock${client.phoenix ? `?phoenix=${encodeURIComponent(client.phoenix)}` : ''}`
+      ));
+      delete client.phoenix;
+      ws.onopen = function open() {
+        client._isOpen = true;
+        client.notifyListeners('onopen');
+
+        (client.pongHistory = [0, 0, 0, 1]), (client.pongCount = 1);
+      };
+
+      ws.onclose = function close() {
+        clearInterval(ws.pingInterval);
+        client._isOpen = false;
+        client.notifyListeners('onclose');
+        delete client.intentionalClose;
+        setTimeout(() => open(), client.intentionalClose ? 100 : 2000);
+      };
+
+      if (ws.on) {
+        ws.on('pong', () => {
+          ws.pongHistory[ws.pongHistory.length - 1]++;
+          ws.pongCount++;
+        });
+      }
+
+      ws.onmessage = function incoming(message) {
+        const match = /^Phoenix:(.*)$/.exec(message.data);
+        if (match) {
+          client.phoenix = JSON.parse(match[1]);
+          client.intentionalClose = true;
+          ws.close();
+          return;
+        }
+
+        performance.mark('receive');
+        log('ws', 'WS>I> Got message from server:   ' + message.data);
+
+        client.notifyListeners(
+          'onpayload',
+          WebSocketClient.decodeMessage({
+            message: message.data
+          })
+        );
+      };
+
+      ws.onerror = err => {
+        log('err', `WS>!> Error: ${err.message}`);
+      };
+
+      if (ws.ping) {
+        ws.pingInterval = setInterval(function ping() {
+          if (!ws.pongCount) {
+            client.intentionalClose = true;
+            return ws.close();
+          }
+
+          ws.pongHistory.push(0);
+          clwsient.pongCount -= ws.pongHistory.shift();
+
+          ws.ping('', false, true);
+        }, 10000);
+      }
+    }
+    open();
+
+    log('ws', `WS>L> Web socket client listening to server on port ${port}`);
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  static decodeMessage({ message }) {
+    const matches = /^(?:(\d+)|(\w+)):/.exec(message),
+      messageIndex = matches && matches[1] !== undefined ? +matches[1] : -1,
+      messageType = matches && matches[2] !== undefined ? matches[2] : undefined;
+    if (matches) message = message.substring(matches[0].length);
+
+    let payloadObject;
+    try {
+      payloadObject = JSON.parse(message);
+    } catch (err) {
+      payloadObject = message;
+    }
+    if (Array.isArray(payloadObject)) {
+      payloadObject = {
+        array: payloadObject
+      };
+    } else if (!payloadObject || typeof payloadObject != 'object') {
+      payloadObject = {
+        message: `${payloadObject}`
+      };
+    }
+
+    return {
+      messageIndex,
+      messageType,
+      payloadObject
+    };
+  }
+  get cache() {
+    return this._cache;
+  }
+
+  sendMessage({ message }) {
+    this.sendPayload(
+      WebSocketClient.decodeMessage({
+        message
+      })
+    );
+  }
+
+  sendPayload({ messageIndex = -1, messageType, payloadObject = {} }) {
+    const client = this;
+
+    if (!client.isOpen) return;
+
+    if (messageIndex == -1 && !messageType) messageIndex = client.nextMessageIndex++;
+    const message = `${
+      messageIndex == -1 ? (messageType ? `${messageType}:` : '') : `${messageIndex}:`
+    }${JSON.stringify(payloadObject)}`;
+    performance.mark('send');
+    log('ws', 'WS>O> Sending message to server:   ' + message);
+
+    client.ws.send(message);
+  }
+}
+
+makeClassWatchable(WebSocketClient);
+
+// API is the public facing class
+module.exports = PublicApi({
+  fromClass: WebSocketClient,
+  hasExposedBackDoor: true
+});
+
+},{"../general/log":1,"../general/public-api":2,"../general/watchable":3,"isomorphic-ws":4}]},{},[5]);

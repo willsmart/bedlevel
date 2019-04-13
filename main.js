@@ -1,4 +1,4 @@
-const processArgs = require('./process_args');
+const processArgs = require('./general/process-args');
 const fs = require('fs');
 const Prompt = require('prompt');
 var Robot = require('./robot');

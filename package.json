@@ -4,8 +4,11 @@
   "main": "main.js",
   "author": "Will Smart <will.r.smart@gmail.com>",
   "dependencies": {
+    "ws": "^3.3.3",
     "prompt": "^1.0.0",
     "serialport": "^6.2.2",
-    "sleep": "^5.2.4"
+    "sleep": "^5.2.4",
+    "cookie": "^0.3.1",
+    "isomorphic-ws": "^4.0.1"
   }
 }
