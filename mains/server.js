@@ -13,7 +13,8 @@ const WebSocketServer = require('../web-socket/web-socket-server');
   const wsserver = new WebSocketServer({
     hasPageServer: true,
     pagePath: `${__dirname}/../public`,
-    cachePage: args['--cachepage']
+    cachePage: args['--cachepage'],
+    sha: args.sha
   });
 
   let tick = 0;
@@ -23,6 +24,5 @@ const WebSocketServer = require('../web-socket/web-socket-server');
   }, 5000);
 
   await wsserver.start({ port: +(args.port || 3000) });
-
   //  console.log(cache, schema, wsserver, datapointDbConnection, connection, args, connectionInfo);
 })();

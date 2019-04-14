@@ -12,15 +12,22 @@ const log = require('../general/log');
 class WebSocketServer {
   // public methods
   static publicMethods() {
-    return ['start', 'cache', 'watch', 'stopWatching'];
+    return ['start', 'cache', 'watch', 'stopWatching', 'clients'];
   }
 
-  constructor({ hasPageServer, pagePath, cachePage = false }) {
+  constructor({ hasPageServer, pagePath, cachePage = false, sha }) {
     const server = this;
+
+    server._clients = {};
+    server.sha = sha;
 
     if (hasPageServer) {
       server.pageServer = new PageServer({ path: pagePath, doCache: cachePage });
     }
+  }
+
+  get clients() {
+    return this._clients;
   }
 
   get cache() {
@@ -170,11 +177,14 @@ class WebSocketClient {
   constructor({ server, session, ws, index, userId }) {
     const client = this;
 
+    server._clients[index] = client;
     client.server = server;
     client.session = session;
     client.ws = ws;
     client.index = index;
     client.userId = userId;
+
+    if (server.sha) client.sendPayload({ messageType: 'SHA', payloadObject: server.sha });
   }
 
   serverReceivedMessage(message) {
@@ -224,6 +234,7 @@ class WebSocketClient {
     const client = this;
     const server = client.server;
 
+    delete server._clients[client.index];
     log('ws', 'Client #' + client.index + ' closed');
 
     client.notifyListeners('onclose');

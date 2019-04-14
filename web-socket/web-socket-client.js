@@ -56,12 +56,23 @@ class WebSocketClient {
       }
 
       ws.onmessage = function incoming(message) {
-        const match = /^Phoenix:(.*)$/.exec(message.data);
+        let match = /^Phoenix:(.*)$/.exec(message.data);
         if (match) {
           client.phoenix = JSON.parse(match[1]);
           client.intentionalClose = true;
           ws.close();
           return;
+        }
+
+        match = /^SHA:(.*)$/.exec(message.data);
+        if (match) {
+          if (client.sha != match[1]) {
+            if (client.sha) {
+              log('ws', `new SHA: ${sha}, will reload`);
+              location.reload(true);
+            } else log('ws', `SHA: ${sha}`);
+            client.sha = match[1];
+          }
         }
 
         performance.mark('receive');
