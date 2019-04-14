@@ -4,12 +4,13 @@ let sha;
 ws.watch({
   callbackKey: 'page',
   onpayload: ({ messageType, payloadObject }) => {
-    if (messageType == 'SHA' && payloadObject != sha) {
+    if (messageType == 'SHA' && payloadObject && payloadObject.message != sha) {
+      const newSha = payloadObject.message;
       if (sha) {
-        log('ws', `new SHA: ${payloadObject}, will reload`);
+        log('ws', `new SHA: ${newSha}, will reload`);
         location.reload(true);
-      } else log('ws', `SHA: ${payloadObject}`);
-      sha = payloadObject;
+      } else log('ws', `SHA: ${newSha}`);
+      sha = newSha;
     }
   }
 });
