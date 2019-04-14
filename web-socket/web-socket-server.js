@@ -184,7 +184,7 @@ class WebSocketClient {
     client.index = index;
     client.userId = userId;
 
-    if (server.sha) client.sendPayload({ messageType: 'SHA', payloadObject: server.sha });
+    if (server.sha) client.sendPayload({ messageType: 'SHA', payloadObject: { sha: server.sha } });
   }
 
   serverReceivedMessage(message) {
