@@ -13,7 +13,7 @@ const WebSocketServer = require('../web-socket/web-socket-server');
   const wsserver = new WebSocketServer({
     hasPageServer: true,
     pagePath: `${__dirname}/../public`,
-    cachePage: args['--cachepage'],
+    cachePage: !args['--nocachepage'],
     sha: args.sha
   });
 
