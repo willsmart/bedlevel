@@ -64,17 +64,6 @@ class WebSocketClient {
           return;
         }
 
-        match = /^SHA:(.*)$/.exec(message.data);
-        if (match) {
-          if (client.sha != match[1]) {
-            if (client.sha) {
-              log('ws', `new SHA: ${sha}, will reload`);
-              location.reload(true);
-            } else log('ws', `SHA: ${sha}`);
-            client.sha = match[1];
-          }
-        }
-
         performance.mark('receive');
         log('ws', 'WS>I> Got message from server:   ' + message.data);
 
