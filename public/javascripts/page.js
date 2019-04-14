@@ -3,13 +3,13 @@ window.ws = new WebSocketClient({ port: 80 });
 let sha;
 ws.watch({
   callbackKey: 'page',
-  onpayload: ({ messageType, payload }) => {
-    if (messageType == 'SHA' && payload && payload.sha != sha) {
+  onpayload: ({ messageType, payloadObject }) => {
+    if (messageType == 'SHA' && payloadObject != sha) {
       if (sha) {
-        log('ws', `new SHA: ${payload.sha}, will reload`);
+        log('ws', `new SHA: ${payloadObject}, will reload`);
         location.reload(true);
-      } else log('ws', `SHA: ${payload.sha}`);
-      sha = payload.sha;
+      } else log('ws', `SHA: ${payloadObject}`);
+      sha = payloadObject;
     }
   }
 });
