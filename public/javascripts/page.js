@@ -1,3 +1,4 @@
+const log = require('../../general/log');
 const WebSocketClient = require('../../web-socket/web-socket-client');
 window.ws = new WebSocketClient({ port: 80 });
 let sha;
